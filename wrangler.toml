@@ -1,11 +1,3 @@
 name = "zzz"
 main = "worker.js"
 compatibility_date = "2025-08-25"
-
-[vars]
-AB = ""
-BC = ""
-
-[env.production]
-AB = ""
-BC = ""
