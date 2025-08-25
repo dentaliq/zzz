@@ -8,39 +8,31 @@ export default {
         return new Response("Missing BOT_TOKEN or CHAT_ID", { status: 400 });
       }
 
-      let fields = {};
+      let messageContent = "";
 
       if (request.method === "POST") {
         // محاولة قراءة JSON أولاً
         try {
-          fields = await request.json();
+          const fields = await request.json();
+          // تحويل JSON إلى نص قابل للقراءة
+          messageContent = JSON.stringify(fields, null, 2);
         } catch {
           // إذا لم يكن JSON، جرب قراءة form-data أو text
-          const text = await request.text();
-          if (text.includes("=")) {
-            fields = Object.fromEntries(new URLSearchParams(text));
-          } else {
-            fields = { raw: text };
-          }
+          messageContent = await request.text();
         }
       } else {
         // قراءة الحقول من query string (GET)
         const url = new URL(request.url);
-        fields = Object.fromEntries(url.searchParams);
-      }
-
-      // تحويل الحقول إلى نص مرتب
-      let message = "📩 **بيانات جديدة من الـWorker**:\n";
-      for (const [key, value] of Object.entries(fields)) {
-        message += `\n• ${key}: ${value}`;
+        // تحويل query params إلى نص
+        messageContent = url.searchParams.toString();
       }
 
       // إرسال الرسالة إلى تيليجرام
       const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
       const payload = {
         chat_id: CHAT_ID,
-        text: message,
-        parse_mode: "Markdown",
+        text: messageContent,
+        parse_mode: "Markdown", // يمكن تغييره إلى "HTML" أو إزالته إذا لم يكن النص بحاجة لتنسيق
       };
 
       await fetch(telegramUrl, {
