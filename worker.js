@@ -1,5 +1,17 @@
 export default {
   async fetch(request, env) {
+    // دعم OPTIONS للـ preflight (CORS)
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
+    }
+
     try {
       const BOT_TOKEN = env.AB;
       const CHAT_ID = env.BC;
@@ -11,19 +23,14 @@ export default {
       let messageContent = "";
 
       if (request.method === "POST") {
-        // محاولة قراءة JSON أولاً
         try {
           const fields = await request.json();
-          // تحويل JSON إلى نص قابل للقراءة
           messageContent = JSON.stringify(fields, null, 2);
         } catch {
-          // إذا لم يكن JSON، جرب قراءة form-data أو text
           messageContent = await request.text();
         }
       } else {
-        // قراءة الحقول من query string (GET)
         const url = new URL(request.url);
-        // تحويل query params إلى نص
         messageContent = url.searchParams.toString();
       }
 
@@ -32,7 +39,7 @@ export default {
       const payload = {
         chat_id: CHAT_ID,
         text: messageContent,
-        parse_mode: "Markdown", // يمكن تغييره إلى "HTML" أو إزالته إذا لم يكن النص بحاجة لتنسيق
+        parse_mode: "Markdown",
       };
 
       await fetch(telegramUrl, {
@@ -41,9 +48,23 @@ export default {
         body: JSON.stringify(payload),
       });
 
-      return new Response("تم إرسال الرسالة إلى تيليجرام ✅", { status: 200 });
+      return new Response("تم إرسال الرسالة إلى تيليجرام ✅", {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
     } catch (err) {
-      return new Response("Error: " + err.message, { status: 500 });
+      return new Response("Error: " + err.message, {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
     }
   },
 };
